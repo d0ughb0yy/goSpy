@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>goSpy Scan Report</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0f172a;color:#e2e8f0;padding:24px}
+h1{font-size:24px;margin-bottom:4px}
+.subtitle{color:#94a3b8;font-size:14px;margin-bottom:24px}
+.summary{display:flex;gap:16px;margin-bottom:16px}
+.summary-item{background:#1e293b;border-radius:8px;padding:16px 24px;text-align:center;flex:1}
+.summary-item .num{font-size:28px;font-weight:700}
+.summary-item .label{font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px}
+.filter-bar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.filter-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;padding:6px 16px;font-size:13px;cursor:pointer;transition:all .15s}
+.filter-btn:hover{background:#334155;color:#e2e8f0}
+.filter-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
+.card{background:#1e293b;border-radius:8px;overflow:hidden;margin-bottom:16px}
+.card.hidden{display:none}
+.card-grid{display:grid;grid-template-columns:300px 1fr;gap:0}
+@media(max-width:768px){.card-grid{grid-template-columns:1fr}}
+.card-img{background:#0f172a;cursor:pointer}
+.card-img img{width:100%;height:200px;object-fit:cover;display:block}
+.card-body{padding:16px}
+.card-body table{width:100%;border-collapse:collapse}
+.card-body td{padding:6px 8px;border-bottom:1px solid #334155;font-size:14px;vertical-align:top}
+.card-body td:first-child{color:#94a3b8;width:100px;white-space:nowrap}
+.card-body td:last-child{color:#e2e8f0;word-break:break-all}
+.error-badge{display:inline-block;background:#dc2626;color:#fff;font-size:12px;padding:2px 8px;border-radius:4px;margin-top:8px}
+.tech-tag{display:inline-block;background:#334155;color:#e2e8f0;font-size:12px;padding:2px 8px;border-radius:4px;margin:2px}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:1000;justify-content:center;align-items:center;padding:40px;cursor:pointer}
+.modal.active{display:flex}
+.modal img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px}
+.no-screenshot{display:flex;align-items:center;justify-content:center;height:80px;background:#0f172a;color:#475569;font-size:14px}
+</style>
+</head>
+<body>
+<h1>goSpy Scan Report</h1>
+<p class="subtitle">Generated: {{.Generated}} &mdash; {{.Total}} targets ({{.Success}} succeeded, {{.Failed}} failed)</p>
+
+<div class="summary">
+  <div class="summary-item">
+    <div class="num" style="color:#22c55e">{{.Total}}</div>
+    <div class="label">Total</div>
+  </div>
+  <div class="summary-item">
+    <div class="num" style="color:#22c55e">{{.Success}}</div>
+    <div class="label">Succeeded</div>
+  </div>
+  <div class="summary-item">
+    <div class="num" style="color:#ef4444">{{.Failed}}</div>
+    <div class="label">Failed</div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterStatus(this,'all')">All</button>
+  <button class="filter-btn" onclick="filterStatus(this,'2')">2xx</button>
+  <button class="filter-btn" onclick="filterStatus(this,'3')">3xx</button>
+  <button class="filter-btn" onclick="filterStatus(this,'4')">4xx</button>
+  <button class="filter-btn" onclick="filterStatus(this,'5')">5xx</button>
+  <button class="filter-btn" onclick="filterStatus(this,'error')">Errors</button>
+</div>
+
+{{range .Entries}}
+<div class="card" data-status="{{if .Error}}error{{else}}{{.StatusCode}}{{end}}">
+  <div class="card-grid">
+    <div class="card-img" onclick="openModal(this)">
+      {{if .ImageData}}
+      <img src="{{.ImageData}}" alt="{{.URL}}">
+      {{else}}
+      <div class="no-screenshot">No screenshot</div>
+      {{end}}
+    </div>
+    <div class="card-body">
+      <table>
+        <tr><td>URL</td><td><a href="{{.URL}}" target="_blank" style="color:#60a5fa">{{.URL}}</a></td></tr>
+        {{if .FinalURL}}<tr><td>Final URL</td><td style="color:#94a3b8">{{.FinalURL}}</td></tr>{{end}}
+        <tr><td>Status</td><td>{{.StatusCode}}</td></tr>
+        <tr><td>Duration</td><td>{{.Duration}}</td></tr>
+        {{if .Technologies}}
+        <tr><td>Tech Stack</td><td>{{range .Technologies}}<span class="tech-tag">{{.}}</span>{{end}}</td></tr>
+        {{end}}
+        {{if .Error}}<tr><td>Error</td><td><span class="error-badge">{{.Error}}</span></td></tr>{{end}}
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}
+
+<div class="modal" id="modal" onclick="closeModal()">
+  <img id="modal-img" src="" alt="Full screenshot">
+</div>
+
+<script>
+function filterStatus(btn, prefix) {
+  document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active") });
+  btn.classList.add("active");
+  document.querySelectorAll(".card").forEach(function(c) {
+    var status = c.getAttribute("data-status");
+    if (prefix === "all") {
+      c.classList.remove("hidden");
+    } else if (prefix === "error") {
+      c.classList.toggle("hidden", status !== "error");
+    } else {
+      c.classList.toggle("hidden", status === "error" || status.charAt(0) !== prefix);
+    }
+  });
+}
+function openModal(el) {
+  var img = el.querySelector("img");
+  if (!img) return;
+  document.getElementById("modal-img").src = img.src;
+  document.getElementById("modal").classList.add("active");
+}
+function closeModal() {
+  document.getElementById("modal").classList.remove("active");
+}
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") closeModal();
+});
+</script>
+</body>
+</html>
