@@ -95,7 +95,10 @@ func NewManager(ctx context.Context) (*Manager, error) {
 	)
 
     allocCtx, allocCancel := chromedp.NewExecAllocator(context.Background(), opts...)
-    browserCtx, _ := chromedp.NewContext(allocCtx)
+    browserCtx, _ := chromedp.NewContext(allocCtx,
+        chromedp.WithLogf(func(string, ...interface{}) {}),
+        chromedp.WithErrorf(func(string, ...interface{}) {}),
+    )
 
     if err := chromedp.Run(browserCtx); err != nil {
         allocCancel()

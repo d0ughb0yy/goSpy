@@ -4,54 +4,97 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>goSpy Scan Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0f172a;color:#e2e8f0;padding:24px}
-h1{font-size:24px;margin-bottom:4px}
-.subtitle{color:#94a3b8;font-size:14px;margin-bottom:24px}
-.summary{display:flex;gap:16px;margin-bottom:16px}
-.summary-item{background:#1e293b;border-radius:8px;padding:16px 24px;text-align:center;flex:1}
-.summary-item .num{font-size:28px;font-weight:700}
-.summary-item .label{font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px}
+body{font-family:'Inter',-apple-system,sans-serif;background:#0b1120;color:#e2e8f0;padding:32px;max-width:1400px;margin:0 auto}
+h1{font-size:28px;font-weight:700;letter-spacing:-.5px;padding-left:16px;border-left:3px solid #3b82f6;line-height:1.2}
+.header-meta{display:flex;align-items:center;gap:12px;margin-top:8px;margin-bottom:32px;padding-left:19px}
+.header-badge{display:inline-flex;align-items:center;gap:6px;background:#1e293b;color:#94a3b8;font-size:13px;padding:4px 12px;border-radius:6px;border:1px solid #334155}
+.header-dot{width:5px;height:5px;border-radius:50%;background:#475569}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.summary-item{background:linear-gradient(135deg,#1e293b,#1a2235);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:20px 24px;text-align:center;transition:transform .2s,box-shadow .2s}
+.summary-item:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.summary-item .num{font-size:32px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-1px}
+.summary-item .label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
 .filter-bar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
-.filter-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;padding:6px 16px;font-size:13px;cursor:pointer;transition:all .15s}
-.filter-btn:hover{background:#334155;color:#e2e8f0}
-.filter-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
-.card{background:#1e293b;border-radius:8px;overflow:hidden;margin-bottom:16px}
+.filter-btn{background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:999px;padding:8px 20px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s}
+.filter-btn:hover{background:#334155;color:#e2e8f0;border-color:#475569}
+.filter-btn.active{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-color:#3b82f6;box-shadow:0 2px 8px rgba(59,130,246,.3)}
+.group-bar{display:flex;align-items:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.group-label{font-size:12px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:.4px;margin-right:4px}
+.group-chip{background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s}
+.group-chip:hover{background:#334155;color:#e2e8f0;border-color:#475569}
+.group-chip.active{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border-color:#8b5cf6;box-shadow:0 2px 8px rgba(139,92,246,.3)}
+.group-chip .count{color:rgba(255,255,255,.5);margin-left:4px;font-size:11px}
+.card{background:linear-gradient(135deg,#1e293b,#1a2235);border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden;margin-bottom:14px;transition:transform .2s,box-shadow .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,.3)}
 .card.hidden{display:none}
 .card-grid{display:grid;grid-template-columns:300px 1fr;gap:0}
 @media(max-width:768px){.card-grid{grid-template-columns:1fr}}
-.card-img{background:#0f172a;cursor:pointer}
-.card-img img{width:100%;height:200px;object-fit:cover;display:block}
-.card-body{padding:16px}
+.card-img{background:#0b1120;cursor:pointer;position:relative;overflow:hidden}
+.card-img img{width:100%;height:200px;object-fit:cover;display:block;transition:transform .3s}
+.card-img:hover img{transform:scale(1.03)}
+.card-body{padding:18px 20px}
 .card-body table{width:100%;border-collapse:collapse}
-.card-body td{padding:6px 8px;border-bottom:1px solid #334155;font-size:14px;vertical-align:top}
-.card-body td:first-child{color:#94a3b8;width:100px;white-space:nowrap}
-.card-body td:last-child{color:#e2e8f0;word-break:break-all}
-.error-badge{display:inline-block;background:#dc2626;color:#fff;font-size:12px;padding:2px 8px;border-radius:4px;margin-top:8px}
-.tech-tag{display:inline-block;background:#334155;color:#e2e8f0;font-size:12px;padding:2px 8px;border-radius:4px;margin:2px}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:1000;justify-content:center;align-items:center;padding:40px;cursor:pointer}
+.card-body td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;vertical-align:top}
+.card-body tr:last-child td{border-bottom:none}
+.card-body td:first-child{color:#64748b;width:90px;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.card-body td:last-child{font-family:'JetBrains Mono',monospace;font-size:12px;color:#cbd5e1;word-break:break-all}
+.status-badge{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;letter-spacing:.3px}
+.status-badge[data-status^="2"]{background:rgba(34,197,94,.12);color:#4ade80}
+.status-badge[data-status^="3"]{background:rgba(234,179,8,.12);color:#fbbf24}
+.status-badge[data-status^="4"]{background:rgba(249,115,22,.12);color:#fb923c}
+.status-badge[data-status^="5"]{background:rgba(239,68,68,.12);color:#f87171}
+.status-badge[data-status="err"]{background:rgba(239,68,68,.1);color:#f87171;font-family:'Inter',monospace}
+.error-badge{display:inline-block;background:rgba(239,68,68,.12);color:#f87171;font-size:11px;padding:4px 10px;border-radius:6px;margin-top:4px;font-family:'Inter',sans-serif;line-height:1.3;word-break:break-word}
+.tech-tag{display:inline-block;background:rgba(99,102,241,.1);color:#a5b4fc;font-size:11px;padding:2px 8px;border-radius:999px;margin:1px 2px;font-family:'Inter',sans-serif;font-weight:500;border:1px solid rgba(99,102,241,.15)}
+.tech-tag:hover{background:rgba(99,102,241,.2)}
+.no-screenshot{display:flex;flex-direction:column;align-items:center;justify-content:center;height:80px;background:#0b1120;color:#475569;font-size:12px;gap:6px;border:1px dashed rgba(71,85,105,.4);border-radius:6px;margin:4px}
+.no-screenshot svg{opacity:.4}
+.urls{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.4}
+.urls a{color:#60a5fa;text-decoration:none}
+.urls a:hover{text-decoration:underline}
+.urls .redirect-row{display:flex;align-items:center;gap:6px;margin-top:4px}
+.urls .final-url{color:#94a3b8}
+.redirect-arrow{color:#475569;font-size:13px;font-family:'Inter',sans-serif;font-weight:600}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:1000;justify-content:center;align-items:center;padding:40px;cursor:pointer}
 .modal.active{display:flex}
-.modal img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px}
-.no-screenshot{display:flex;align-items:center;justify-content:center;height:80px;background:#0f172a;color:#475569;font-size:14px}
+.modal-content{position:relative;max-width:95vw;max-height:90vh}
+.modal img{max-width:100%;max-height:90vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:block}
+.modal-close{position:fixed;top:20px;right:24px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:rgba(30,41,59,.8);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#94a3b8;font-size:18px;cursor:pointer;transition:all .2s;z-index:1001;backdrop-filter:blur(4px)}
+.modal-close:hover{background:#334155;color:#e2e8f0}
 </style>
 </head>
 <body>
 <h1>goSpy Scan Report</h1>
-<p class="subtitle">Generated: {{.Generated}} &mdash; {{.Total}} targets ({{.Success}} succeeded, {{.Failed}} failed)</p>
+<div class="header-meta">
+  <span class="header-badge">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    {{.Generated}}
+  </span>
+  <span class="header-dot"></span>
+  <span class="header-badge">{{.Total}} targets</span>
+</div>
 
 <div class="summary">
   <div class="summary-item">
-    <div class="num" style="color:#22c55e">{{.Total}}</div>
+    <div class="num" style="color:#60a5fa">{{.Total}}</div>
     <div class="label">Total</div>
   </div>
   <div class="summary-item">
-    <div class="num" style="color:#22c55e">{{.Success}}</div>
+    <div class="num" style="color:#4ade80">{{.Success}}</div>
     <div class="label">Succeeded</div>
   </div>
   <div class="summary-item">
-    <div class="num" style="color:#ef4444">{{.Failed}}</div>
+    <div class="num" style="color:#f87171">{{.Failed}}</div>
     <div class="label">Failed</div>
+  </div>
+  <div class="summary-item">
+    <div class="num" style="color:#fbbf24">{{.FailureRate}}</div>
+    <div class="label">Failure Rate</div>
   </div>
 </div>
 
@@ -64,24 +107,33 @@ h1{font-size:24px;margin-bottom:4px}
   <button class="filter-btn" onclick="filterStatus(this,'error')">Errors</button>
 </div>
 
+<div class="group-bar">
+  <span class="group-label">Grouped by host</span>
+  {{range .Groups}}
+  <button class="group-chip" onclick="filterGroup(this,'{{.Key}}')">{{.Label}}<span class="count">({{.Count}})</span></button>
+  {{end}}
+</div>
+
 {{range .Entries}}
-<div class="card" data-status="{{if .Error}}error{{else}}{{.StatusCode}}{{end}}">
+<div class="card" data-status="{{if .Error}}error{{else}}{{.StatusCode}}{{end}}" data-group="{{.GroupKey}}">
   <div class="card-grid">
     <div class="card-img" onclick="openModal(this)">
       {{if .ImageData}}
-      <img src="{{.ImageData}}" alt="{{.URL}}">
+      <img src="{{.ImageData}}" alt="{{.URL}}" loading="lazy">
       {{else}}
-      <div class="no-screenshot">No screenshot</div>
+      <div class="no-screenshot">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M22 6l-3-4H5L2 6"/></svg>
+        No screenshot
+      </div>
       {{end}}
     </div>
     <div class="card-body">
       <table>
-        <tr><td>URL</td><td><a href="{{.URL}}" target="_blank" style="color:#60a5fa">{{.URL}}</a></td></tr>
-        {{if .FinalURL}}<tr><td>Final URL</td><td style="color:#94a3b8">{{.FinalURL}}</td></tr>{{end}}
-        <tr><td>Status</td><td>{{.StatusCode}}</td></tr>
+        <tr><td>URL</td><td class="urls"><a href="{{.URL}}" target="_blank">{{.URL}}</a>{{if .Redirected}}<div class="redirect-row"><span class="redirect-arrow">→</span><a href="{{.FinalURL}}" target="_blank" class="final-url">{{.FinalURL}}</a></div>{{end}}</td></tr>
+        <tr><td>Status</td><td><span class="status-badge" data-status="{{if .Error}}err{{else}}{{.StatusCode}}{{end}}">{{if .Error}}ERR{{else}}{{.StatusCode}}{{end}}</span></td></tr>
         <tr><td>Duration</td><td>{{.Duration}}</td></tr>
         {{if .Technologies}}
-        <tr><td>Tech Stack</td><td>{{range .Technologies}}<span class="tech-tag">{{.}}</span>{{end}}</td></tr>
+        <tr><td>Tech</td><td>{{range .Technologies}}<span class="tech-tag">{{.}}</span>{{end}}</td></tr>
         {{end}}
         {{if .Error}}<tr><td>Error</td><td><span class="error-badge">{{.Error}}</span></td></tr>{{end}}
       </table>
@@ -91,24 +143,53 @@ h1{font-size:24px;margin-bottom:4px}
 {{end}}
 
 <div class="modal" id="modal" onclick="closeModal()">
-  <img id="modal-img" src="" alt="Full screenshot">
+  <div class="modal-content">
+    <img id="modal-img" src="" alt="Full screenshot">
+  </div>
+  <button class="modal-close" onclick="event.stopPropagation();closeModal()">&times;</button>
 </div>
 
 <script>
+var activeStatus = "all";
+var activeGroup = "all";
+
+function applyFilters() {
+  document.querySelectorAll(".card").forEach(function(c) {
+    var status = c.getAttribute("data-status");
+    var group = c.getAttribute("data-group");
+    var show = true;
+
+    if (activeStatus === "error") {
+      if (status !== "error") show = false;
+    } else if (activeStatus !== "all") {
+      if (status === "error" || status.charAt(0) !== activeStatus) show = false;
+    }
+
+    if (activeGroup !== "all" && group !== activeGroup) show = false;
+
+    c.classList.toggle("hidden", !show);
+  });
+}
+
 function filterStatus(btn, prefix) {
   document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active") });
   btn.classList.add("active");
-  document.querySelectorAll(".card").forEach(function(c) {
-    var status = c.getAttribute("data-status");
-    if (prefix === "all") {
-      c.classList.remove("hidden");
-    } else if (prefix === "error") {
-      c.classList.toggle("hidden", status !== "error");
-    } else {
-      c.classList.toggle("hidden", status === "error" || status.charAt(0) !== prefix);
-    }
-  });
+  activeStatus = prefix;
+  applyFilters();
 }
+
+function filterGroup(btn, key) {
+  if (activeGroup === key) {
+    activeGroup = "all";
+    btn.classList.remove("active");
+  } else {
+    document.querySelectorAll(".group-chip").forEach(function(b) { b.classList.remove("active") });
+    btn.classList.add("active");
+    activeGroup = key;
+  }
+  applyFilters();
+}
+
 function openModal(el) {
   var img = el.querySelector("img");
   if (!img) return;

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"log/slog"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,16 +25,26 @@ type reportEntry struct {
 	Technologies []string
 	Error        string
 	Duration     string
+	GroupKey     string
+	Redirected   bool
 	ImageData    template.URL
 }
 
+type reportGroup struct {
+	Key   string
+	Label string
+	Count int
+}
+
 type reportData struct {
-	Title     string
-	Generated string
-	Total     int
-	Success   int
-	Failed    int
-	Entries   []reportEntry
+	Title       string
+	Generated   string
+	Total       int
+	Success     int
+	Failed      int
+	FailureRate string
+	Groups      []reportGroup
+	Entries     []reportEntry
 }
 
 func Generate(outputDir string, targets []models.Target) error {
@@ -42,12 +53,30 @@ func Generate(outputDir string, targets []models.Target) error {
 	failed := 0
 
 	entries := make([]reportEntry, 0, total)
+	groupMap := make(map[string]int)
+	groupOrder := make([]string, 0, total)
 	for _, t := range targets {
 		if t.Error != "" {
 			failed++
 		} else {
 			success++
 		}
+
+		redirected := t.FinalURL != "" && t.FinalURL != t.URL
+
+		groupKey := "__none__"
+		if redirected {
+			if u, err := url.Parse(t.FinalURL); err == nil {
+				groupKey = u.Host
+			} else {
+				groupKey = t.FinalURL
+			}
+		}
+
+		if _, ok := groupMap[groupKey]; !ok {
+			groupOrder = append(groupOrder, groupKey)
+		}
+		groupMap[groupKey]++
 
 		entry := reportEntry{
 			URL:          t.URL,
@@ -56,6 +85,8 @@ func Generate(outputDir string, targets []models.Target) error {
 			Technologies: t.Technologies,
 			Error:        t.Error,
 			Duration:     formatDuration(t.Duration),
+			GroupKey:     groupKey,
+			Redirected:   redirected,
 		}
 
 		if t.ScreenshotPath != "" {
@@ -72,18 +103,33 @@ func Generate(outputDir string, targets []models.Target) error {
 		entries = append(entries, entry)
 	}
 
+	groups := make([]reportGroup, 0, len(groupOrder))
+	for _, k := range groupOrder {
+		if k == "__none__" || groupMap[k] <= 1 {
+			continue
+		}
+		groups = append(groups, reportGroup{Key: k, Label: k, Count: groupMap[k]})
+	}
+
 	tmpl, err := template.ParseFS(templateFS, "template.html")
 	if err != nil {
 		return fmt.Errorf("parse report template: %w", err)
 	}
 
+	failureRate := "0%"
+	if total > 0 {
+		failureRate = fmt.Sprintf("%d%%", failed*100/total)
+	}
+
 	data := reportData{
-		Title:     "goSpy Scan Report",
-		Generated: time.Now().Format("2006-01-02 15:04:05"),
-		Total:     total,
-		Success:   success,
-		Failed:    failed,
-		Entries:   entries,
+		Title:       "goSpy Scan Report",
+		Generated:   time.Now().Format("2006-01-02 15:04:05"),
+		Total:       total,
+		Success:     success,
+		Failed:      failed,
+		FailureRate: failureRate,
+		Groups:      groups,
+		Entries:     entries,
 	}
 
 	path := filepath.Join(outputDir, "report.html")
