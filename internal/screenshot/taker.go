@@ -24,7 +24,7 @@ func NewTaker(width, height int) *Taker {
 	}
 }
 
-// Capture navigates to the target URL and captures a full-page screenshot.
+// Capture navigates to the target URL and captures a viewport screenshot.
 // Returns the screenshot bytes. The target's ScreenshotPath is NOT set here —
 // that's the output writer's job.
 func (t *Taker) Capture(ctx context.Context, target *models.Target) ([]byte, error) {
@@ -40,7 +40,7 @@ func (t *Taker) Capture(ctx context.Context, target *models.Target) ([]byte, err
 		chromedp.EmulateViewport(int64(t.width), int64(t.height)),
 		chromedp.Navigate(target.URL),
 		chromedp.WaitReady("body", chromedp.ByQuery),
-		chromedp.FullScreenshot(&buf, 90),
+		chromedp.CaptureScreenshot(&buf),
 	); err != nil {
 		return nil, fmt.Errorf("screenshot %s: %w", target.URL, err)
 	}
