@@ -4,7 +4,9 @@ import (
     "context"
     "fmt"
     "log/slog"
+    "math/rand"
     "sync"
+    "time"
 
     "github.com/d0ughb0yy/goSpy/internal/models"
 )
@@ -15,6 +17,7 @@ type ProcessFunc func(ctx context.Context, target *models.Target)
 // Scheduler distributes targets across a worker pool.
 type Scheduler struct {
 	workers int
+	delay   time.Duration
 }
 
 // New creates a Scheduler with the given worker count.
@@ -24,6 +27,12 @@ func New(workers int) *Scheduler {
         workers = 1
     }
     return &Scheduler{workers: workers}
+}
+
+// WithDelay returns a copy of the Scheduler with a per-request delay applied between each target.
+func (s *Scheduler) WithDelay(d time.Duration) *Scheduler {
+    s.delay = d
+    return s
 }
 
 // Run processes all targets through the given function using a worker pool.
@@ -67,6 +76,16 @@ func (s *Scheduler) Run(ctx context.Context, targets []models.Target, fn Process
 
                     fn(ctx, &target)
                     output <- target
+
+                    // Apply jittered delay between requests (up to +500ms)
+                    if s.delay > 0 {
+                        jitter := time.Duration(rand.Int63n(500)) * time.Millisecond
+                        select {
+                        case <-ctx.Done():
+                            return
+                        case <-time.After(s.delay + jitter):
+                        }
+                    }
                 }()
             }
         }()

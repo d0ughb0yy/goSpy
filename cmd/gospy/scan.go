@@ -27,14 +27,18 @@ Output is saved to the specified directory.`,
 }
 
 var (
-	workers int
-	width   int
-	height  int
-	timeout time.Duration
-	output  string
-	profile string
-	resume  bool
-	verbose bool
+	workers     int
+	width       int
+	height      int
+	timeout     time.Duration
+	output      string
+	profile     string
+	resume      bool
+	verbose     bool
+	delay       time.Duration
+	maxPerHost  int
+	maxRetries  int
+	noRateLimit bool
 )
 
 func init() {
@@ -46,6 +50,10 @@ func init() {
 	scanCmd.Flags().StringVarP(&profile, "profile", "p", "desktop", "screenshot profile (desktop, laptop, mobile)")
 	scanCmd.Flags().BoolVar(&resume, "resume", false, "resume from checkpoint (not yet implemented)")
 	scanCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "enable debug logging")
+	scanCmd.Flags().DurationVar(&delay, "delay", 2*time.Second, "delay between requests (random jitter up to +500ms)")
+	scanCmd.Flags().IntVar(&maxPerHost, "max-per-host", 2, "max concurrent requests per host")
+	scanCmd.Flags().IntVar(&maxRetries, "max-retries", 3, "max retries on rate-limit responses (429/503)")
+	scanCmd.Flags().BoolVar(&noRateLimit, "no-rate-limit", false, "disable all rate limiting")
 
 	rootCmd.AddCommand(scanCmd)
 }
@@ -54,14 +62,18 @@ func runScan(cmd *cobra.Command, args []string) error {
     logger.Setup(verbose)
 
     cfg := &config.Config{
-        Workers:   workers,
-        Width:     width,
-        Height:    height,
-        Timeout:   timeout,
-        OutputDir: output,
-        Profile:   profile,
-        Resume:    resume,
-        Verbose:   verbose,
+        Workers:     workers,
+        Width:       width,
+        Height:      height,
+        Timeout:     timeout,
+        OutputDir:   output,
+        Profile:     profile,
+        Resume:      resume,
+        Verbose:     verbose,
+        Delay:       delay,
+        MaxPerHost:  maxPerHost,
+        MaxRetries:  maxRetries,
+        NoRateLimit: noRateLimit,
     }
 
     // Apply profile presets only if user didn't explicitly set width/height

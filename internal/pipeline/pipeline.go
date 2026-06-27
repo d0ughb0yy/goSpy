@@ -17,7 +17,7 @@ import (
 
 // Run executes the full two-stage pipeline: HTTP fetch → screenshot.
 func Run(ctx context.Context, cfg *config.Config, targets []models.Target) error {
-	collector, err := httpcollector.New()
+	collector, err := httpcollector.New(cfg)
 	if err != nil {
 		return fmt.Errorf("init http collector: %w", err)
 	}
@@ -30,7 +30,7 @@ func Run(ctx context.Context, cfg *config.Config, targets []models.Target) error
 
 	taker := screenshot.NewTaker(cfg.Width, cfg.Height)
 	writer := output.NewWriter(cfg.OutputDir)
-	sched := scheduler.New(cfg.Workers)
+	sched := scheduler.New(cfg.Workers).WithDelay(cfg.Delay)
 
 	// Stage 1: HTTP fetch
 	slog.Info("stage 1: fetching URLs", "count", len(targets))
